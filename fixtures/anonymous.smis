@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<smis>
+  <version>0.3.4</version>
+  <read-only>false</read-only>
+  <notes/>
+  <unit>cm</unit>
+  <pm_system>998</pm_system>
+  <personal>
+    <family-name/>
+    <given-name/>
+    <birth-date>1800-01-01</birth-date>
+    <gender>unknown</gender>
+    <email/>
+  </personal>
+  <body-measurements>
+    <m name="@girth" value="80" full_name="Synthetic girth" description="Original test dimension"/>
+    <m name="@length" value="50" full_name="Synthetic length" description="Original test dimension"/>
+    <m name="@ease" value="2" full_name="Fixed allowance" description="Keep this numeric constant"/>
+    <m name="@quarter" value="@girth/4+@ease" full_name="Derived width" description="Protected formula"/>
+    <m name="@halfLength" value="@length/2" full_name="Derived height" description="Protected formula"/>
+  </body-measurements>
+</smis>
