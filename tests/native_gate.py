@@ -8,10 +8,19 @@ BIN=Path(os.environ['SEAMLY_BIN_DIR']).resolve()
 REPORT={'status':'running','release':'v2026.10.5.154','consumer_sha256':'9ab9e43e21637e166507c34a87174f81d01ccb663d5a32a7dc51668915680e7c','checks':[]}
 def save(): (OUT/'native-report.json').write_text(json.dumps(REPORT,indent=2))
 def run(tool,args,label,expect=0):
- p=subprocess.run([str(BIN/tool),*map(str,args)],cwd=ROOT,text=True,capture_output=True,timeout=90)
+ command=[str(BIN/tool),*map(str,args)]
+ try:
+  p=subprocess.run(command,cwd=ROOT,text=True,capture_output=True,timeout=90)
+ except subprocess.TimeoutExpired as exc:
+  def decode(value): return value.decode(errors='replace') if isinstance(value,bytes) else (value or '')
+  partial=decode(exc.stdout)+'\n'+decode(exc.stderr)
+  (OUT/(label+'.log')).write_text(partial+'\nTIMEOUT after 90 seconds\n')
+  REPORT['checks'].append({'check':label,'command':command,'timeout_seconds':90,'passed':False})
+  save()
+  raise
  text=p.stdout+'\n'+p.stderr
  (OUT/(label+'.log')).write_text(text)
- REPORT['checks'].append({'check':label,'exit_code':p.returncode})
+ REPORT['checks'].append({'check':label,'exit_code':p.returncode,'expected_exit': 'zero' if expect==0 else 'nonzero','passed':p.returncode==0 if expect==0 else p.returncode!=0})
  save()
  if expect==0: assert p.returncode==0,(label,p.returncode,text)
  else: assert p.returncode!=0,(label,'Invalid formula was accepted by native consumer',text)
@@ -78,7 +87,7 @@ def rectangles(file):
   for child in e:walk(child,t)
  walk(root,I);return found
 try:
- run('seamlyme',['--version'],'seamlyme-version')
+ run('seamlyme',['--test','--version'],'seamlyme-version')
  run('seamly2d',['--version'],'seamly2d-version')
  helptext=run('seamly2d',['--help'],'seamly2d-help')
  # Read the format number from this pinned binary's help, never assume it.
@@ -93,14 +102,24 @@ try:
   dst=OUT/(row+'.smis');dst.write_text(T.replace('value="80"','value="'+g+'"').replace('value="50"','value="'+l+'"'));files.append(dst)
   run('seamlyme',['--test',dst],row+'-measurements')
  bad=OUT/'invalid-formula.smis';bad.write_text(T.replace('@girth/4+@ease','@missing_dependency/4+@ease'))
- run('seamlyme',['--test',bad],'invalid-formula',expect=1)
+ failures=[]
+ try:
+  run('seamlyme',['--test',bad],'invalid-formula',expect=1)
+ except (AssertionError, subprocess.TimeoutExpired) as exc:
+  failures.append({'check':'invalid-formula','error':repr(exc)})
+  REPORT['failures']=failures;save()
  for row,unit,girth,length,g,l,w,h in inputs:
-  dest=OUT/row;dest.mkdir(exist_ok=True)
-  run('seamly2d',['--measurefile',OUT/(row+'.smis'),'--basename',row,'--destination',dest,'--format',fmt,'--exportonlydetails',ROOT/'fixtures/rectangle.sm2d'],row+'-export')
-  svgs=list(dest.glob('*.svg')); assert svgs,(row,'no native SVG output')
-  candidates=[r for f in svgs for r in rectangles(f)]
-  REPORT['checks'].append({'check':row+'-rectangle','expected_cm':[w,h],'candidates':candidates});save()
-  assert any(abs(r['width_mm']-w*10)<0.08 and abs(r['height_mm']-h*10)<0.08 for r in candidates),(row,'native rectangle has wrong dimensions',candidates)
+  try:
+   dest=OUT/row;dest.mkdir(exist_ok=True)
+   run('seamly2d',['--measurefile',OUT/(row+'.smis'),'--basename',row,'--destination',dest,'--format',fmt,'--exportonlydetails',ROOT/'fixtures/rectangle.sm2d'],row+'-export')
+   svgs=list(dest.glob('*.svg')); assert svgs,(row,'no native SVG output')
+   candidates=[r for f in svgs for r in rectangles(f)]
+   REPORT['checks'].append({'check':row+'-rectangle','expected_cm':[w,h],'candidates':candidates});save()
+   assert any(abs(r['width_mm']-w*10)<0.08 and abs(r['height_mm']-h*10)<0.08 for r in candidates),(row,'native rectangle has wrong dimensions',candidates)
+  except (AssertionError, subprocess.TimeoutExpired, KeyError, ValueError, ET.ParseError) as exc:
+   failures.append({'check':row+'-geometry','error':repr(exc)})
+   REPORT['failures']=failures;save()
+ assert not failures, failures
  REPORT['status']='passed';save();print(json.dumps(REPORT,indent=2))
 except Exception as exc:
  REPORT['status']='failed';REPORT['error']=repr(exc);save();raise
