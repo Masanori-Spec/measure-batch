@@ -93,6 +93,7 @@ try:
  # Read the format number from this pinned binary's help, never assume it.
  svg=re.search(r'(?im)^.*\bsvg\b[^\n]*?=\s*(\d+)\s*$',helptext)
  assert svg, 'Could not identify SVG export format from pinned native --help'
+ assert '--mfile' in helptext and '--exportOnlyDetails' in helptext, 'Pinned CLI help does not expose required export options'
  fmt=svg.group(1); REPORT['svg_format']=fmt
  T=(ROOT/'fixtures/anonymous.smis').read_text()
  inputs=[('A','cm','80','50','80','50',22,25),('B','mm','900','600','90','60',24.5,30),('C','inch','40','24','101.6','60.96',27.4,30.48)]
@@ -111,7 +112,7 @@ try:
  for row,unit,girth,length,g,l,w,h in inputs:
   try:
    dest=OUT/row;dest.mkdir(exist_ok=True)
-   run('seamly2d',['--measurefile',OUT/(row+'.smis'),'--basename',row,'--destination',dest,'--format',fmt,'--exportonlydetails',ROOT/'fixtures/rectangle.sm2d'],row+'-export')
+   run('seamly2d',['--mfile',OUT/(row+'.smis'),'--basename',row,'--destination',dest,'--format',fmt,'--exportOnlyDetails',ROOT/'fixtures/rectangle.sm2d'],row+'-export')
    svgs=list(dest.glob('*.svg')); assert svgs,(row,'no native SVG output')
    candidates=[r for f in svgs for r in rectangles(f)]
    REPORT['checks'].append({'check':row+'-rectangle','expected_cm':[w,h],'candidates':candidates});save()
@@ -119,7 +120,8 @@ try:
   except (AssertionError, subprocess.TimeoutExpired, KeyError, ValueError, ET.ParseError) as exc:
    failures.append({'check':row+'-geometry','error':repr(exc)})
    REPORT['failures']=failures;save()
+ REPORT['status']='failed' if failures else 'passed'
+ save();print(json.dumps(REPORT,indent=2),flush=True)
  assert not failures, failures
- REPORT['status']='passed';save();print(json.dumps(REPORT,indent=2))
 except Exception as exc:
  REPORT['status']='failed';REPORT['error']=repr(exc);save();raise
