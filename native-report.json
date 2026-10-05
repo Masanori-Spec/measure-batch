@@ -1,0 +1,185 @@
+{
+  "status": "NO-GO",
+  "is_finished_app": false,
+  "scope": "Synthetic native feasibility gate only; no CSV conversion app or user interface built",
+  "tested_commit": "6243c058494653e944acfb6e19901ab3486a0565",
+  "workflow_run": "https://github.com/Masanori-Spec/measure-batch/actions/runs/37300717757",
+  "job_id": 111732514729,
+  "release": "v2026.10.5.154",
+  "consumer_sha256": "9ab9e43e21637e166507c34a87174f81d01ccb663d5a32a7dc51668915680e7c",
+  "overall_gate_passed": false,
+  "svg_format": "0",
+  "geometry_tolerance_mm": 0.08,
+  "checks": [
+    {
+      "check": "seamlyme-version",
+      "exit_code": 0,
+      "expected_exit": "zero",
+      "passed": true
+    },
+    {
+      "check": "seamly2d-version",
+      "exit_code": 0,
+      "expected_exit": "zero",
+      "passed": true
+    },
+    {
+      "check": "seamly2d-help",
+      "exit_code": 0,
+      "expected_exit": "zero",
+      "passed": true
+    },
+    {
+      "check": "A-measurements",
+      "exit_code": 0,
+      "expected_exit": "zero",
+      "passed": true
+    },
+    {
+      "check": "B-measurements",
+      "exit_code": 0,
+      "expected_exit": "zero",
+      "passed": true
+    },
+    {
+      "check": "C-measurements",
+      "exit_code": 0,
+      "expected_exit": "zero",
+      "passed": true
+    },
+    {
+      "check": "invalid-formula",
+      "exit_code": 0,
+      "expected_exit": "nonzero",
+      "passed": false
+    },
+    {
+      "check": "A-export",
+      "exit_code": 0,
+      "expected_exit": "zero",
+      "passed": true
+    },
+    {
+      "check": "A-rectangle",
+      "expected_cm": [
+        22,
+        25
+      ],
+      "candidates": [
+        {
+          "width_mm": 220.00006651620646,
+          "height_mm": 250.00019563636357,
+          "points_mm": [
+            [
+              0.26458343337334933,
+              0.26458350951374204
+            ],
+            [
+              220.26464994957982,
+              0.26458350951374204
+            ],
+            [
+              220.26464994957982,
+              250.26477914587733
+            ],
+            [
+              0.2645834333733034,
+              250.26477914587733
+            ],
+            [
+              0.26458343337334933,
+              0.26458350951374204
+            ]
+          ]
+        }
+      ],
+      "passed": true
+    },
+    {
+      "check": "B-export",
+      "exit_code": 0,
+      "expected_exit": "zero",
+      "passed": true
+    },
+    {
+      "check": "B-rectangle",
+      "expected_cm": [
+        24.5,
+        30
+      ],
+      "candidates": [
+        {
+          "width_mm": 245.00018305933116,
+          "height_mm": 300.0003750837005,
+          "points_mm": [
+            [
+              0.2645836030204962,
+              0.2645832599118943
+            ],
+            [
+              245.26476666235166,
+              0.2645832599118943
+            ],
+            [
+              245.26476666235166,
+              300.26495834361236
+            ],
+            [
+              0.2645836030204411,
+              300.26495834361236
+            ],
+            [
+              0.2645836030204962,
+              0.2645832599118943
+            ]
+          ]
+        }
+      ],
+      "passed": true
+    },
+    {
+      "check": "C-export",
+      "exit_code": 0,
+      "expected_exit": "zero",
+      "passed": true
+    },
+    {
+      "check": "C-rectangle",
+      "expected_cm": [
+        27.4,
+        30.48
+      ],
+      "candidates": [
+        {
+          "width_mm": 273.99993738669235,
+          "height_mm": 304.8004163052905,
+          "points_mm": [
+            [
+              0.2645834136933462,
+              0.2645836947094536
+            ],
+            [
+              274.2645208003857,
+              0.2645836947094536
+            ],
+            [
+              274.2645208003857,
+              305.065
+            ],
+            [
+              0.2645834136932902,
+              305.065
+            ],
+            [
+              0.2645834136933462,
+              0.2645836947094536
+            ]
+          ]
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "blocker": "The intentionally invalid @missing_dependency/4+@ease formula returns exit code 0 from SeamlyME --test. The mandatory nonzero-exit negative therefore fails.",
+  "decision": "Do not proceed to product UI under the original acceptance gate. Geometry success does not override negative-control failure."
+}
