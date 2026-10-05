@@ -19,7 +19,7 @@ jobs:
       - name: Install isolated native display runtime
         run: |
           sudo apt-get update
-          sudo apt-get install --no-install-recommends -y xvfb xauth libxcb-cursor0 libxcb-xinerama0 libxkbcommon-x11-0
+          sudo apt-get install --no-install-recommends -y xvfb xauth libegl1 libgl1 libx11-xcb1 libfontconfig1 libxcb-cursor0 libxcb-xinerama0 libxkbcommon-x11-0
       - name: Fetch pinned official test-only consumer
         run: |
           mkdir -p "$RUNNER_TEMP/seamly"
@@ -29,6 +29,13 @@ jobs:
           chmod +x Seamly2D.AppImage
           ./Seamly2D.AppImage --appimage-extract > extract.log
           echo "SEAMLY_BIN_DIR=$RUNNER_TEMP/seamly/squashfs-root/usr/bin" >> "$GITHUB_ENV"
+      - name: Check native runtime linkage
+        run: |
+          mkdir -p artifacts/native
+          for file in "$SEAMLY_BIN_DIR/seamlyme" "$SEAMLY_BIN_DIR/seamly2d" "$SEAMLY_BIN_DIR/../plugins/platforms/libqxcb.so"; do
+            ldd "$file" | tee -a artifacts/native/runtime-linkage.log
+          done
+          if grep -q 'not found' artifacts/native/runtime-linkage.log; then exit 1; fi
       - name: Native measurement, negative formula and unscaled SVG geometry gate
         run: |
           python scripts/create-fixtures.py
