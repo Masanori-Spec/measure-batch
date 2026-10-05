@@ -1,0 +1,41 @@
+name: MeasureBatch native go-no-go
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-seamly-gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install isolated native display runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y xvfb xauth libxcb-cursor0 libxcb-xinerama0 libxkbcommon-x11-0
+      - name: Fetch pinned official test-only consumer
+        run: |
+          mkdir -p "$RUNNER_TEMP/seamly"
+          cd "$RUNNER_TEMP/seamly"
+          curl --fail --location --retry 3 -o Seamly2D.AppImage https://github.com/FashionFreedom/Seamly2D/releases/download/v2026.10.5.154/Seamly2D-x86_64.AppImage
+          echo '9ab9e43e21637e166507c34a87174f81d01ccb663d5a32a7dc51668915680e7c  Seamly2D.AppImage' | sha256sum -c -
+          chmod +x Seamly2D.AppImage
+          ./Seamly2D.AppImage --appimage-extract > extract.log
+          echo "SEAMLY_BIN_DIR=$RUNNER_TEMP/seamly/squashfs-root/usr/bin" >> "$GITHUB_ENV"
+      - name: Native measurement, negative formula and unscaled SVG geometry gate
+        run: |
+          python scripts/create-fixtures.py
+          xvfb-run -a -s '-screen 0 1280x1024x24 -nolisten tcp' python tests/native_gate.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: measure-batch-native-gate
+          path: artifacts/native/
+          if-no-files-found: error
